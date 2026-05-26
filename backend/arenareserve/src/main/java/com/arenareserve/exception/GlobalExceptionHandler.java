@@ -1,0 +1,54 @@
+package com.arenareserve.exception;
+
+import com.arenareserve.dto.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.time.LocalDateTime;
+import java.util.stream.Collectors;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(ResourceNotFoundException.class)
+    ResponseEntity<ErrorResponse> notFound(RuntimeException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler({ReservaSolapadaException.class, HorarioNoDisponibleException.class})
+    ResponseEntity<ErrorResponse> conflict(RuntimeException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler({PagoInvalidoException.class, OperacionNoPermitidaException.class, IllegalArgumentException.class})
+    ResponseEntity<ErrorResponse> badRequest(RuntimeException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<ErrorResponse> denied(AccessDeniedException ex, HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, "No tiene permisos para realizar esta operacion", request);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ResponseEntity<ErrorResponse> validation(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        return build(HttpStatus.BAD_REQUEST, message, request);
+    }
+
+    @ExceptionHandler(Exception.class)
+    ResponseEntity<ErrorResponse> unexpected(Exception ex, HttpServletRequest request) {
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor", request);
+    }
+
+    private ResponseEntity<ErrorResponse> build(HttpStatus status, String message, HttpServletRequest request) {
+        return ResponseEntity.status(status).body(new ErrorResponse(LocalDateTime.now(), status.value(),
+                status.getReasonPhrase(), message, request.getRequestURI()));
+    }
+}

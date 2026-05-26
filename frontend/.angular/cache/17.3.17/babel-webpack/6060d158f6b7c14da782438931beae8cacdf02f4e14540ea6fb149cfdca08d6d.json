@@ -1,0 +1,1 @@
+{"ast":null,"code":"export const jwtInterceptor = (req, next) => {\n  const token = localStorage.getItem('arenareserve_token');\n  const authReq = token ? req.clone({\n    setHeaders: {\n      Authorization: `Bearer ${token}`\n    }\n  }) : req;\n  return next(authReq);\n};","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}
