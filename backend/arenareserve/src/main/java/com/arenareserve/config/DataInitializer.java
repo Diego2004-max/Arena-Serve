@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 @Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
+
     private final UsuarioRepository usuarioRepository;
     private final CanchaRepository canchaRepository;
     private final ServicioAdicionalRepository servicioRepository;
@@ -26,17 +27,20 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (usuarioRepository.count() == 0) {
-            UsuarioSistema admin = new UsuarioSistema();
-            admin.setEmail("admin@arenareserve.com");
-            admin.setPassword(passwordEncoder.encode("Admin12345"));
-            admin.setRol(Rol.ADMIN);
-            usuarioRepository.save(admin);
-        }
+        UsuarioSistema admin = usuarioRepository.findByEmail("admin@arenareserve.com")
+                .orElseGet(UsuarioSistema::new);
+
+        admin.setEmail("admin@arenareserve.com");
+        admin.setPassword(passwordEncoder.encode("Admin12345"));
+        admin.setRol(Rol.ADMIN);
+        admin.setActivo(true);
+        usuarioRepository.save(admin);
+
         if (canchaRepository.count() == 0) {
             crearCancha("Cancha Norte", TipoCancha.FUTBOL_5, 10, "80000");
             crearCancha("Cancha Sur", TipoCancha.FUTBOL_7, 14, "120000");
         }
+
         crearServicio("Balon", "10000");
         crearServicio("Petos", "15000");
         crearServicio("Arbitraje", "50000");

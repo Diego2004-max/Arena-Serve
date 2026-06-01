@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://arenareserve-backend.example.com/api'
+  apiUrl: 'https://arenareserve-api.onrender.com/api'
 };
